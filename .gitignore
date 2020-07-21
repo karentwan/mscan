@@ -1,0 +1,5 @@
+.idea/
+*.pyc
+_pycache_/
+snapshot/
+readme.txt
