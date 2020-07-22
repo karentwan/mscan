@@ -15,38 +15,14 @@ class Base(object):
         super(Base, self).__init__()
         self.args = args
         self.model = None
-        self.loss_fn = None
         # save result
         self.output = None
         # save max value calculated
-        self.loss_val = None
         self.exp_dir = self.args.exp_dir  # the dir of save model and test result
         self.save_model_name = self.args.save_model_name
         self.best_psnr = 0.
         self.best_epoch = 0
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    @staticmethod
-    def weight_init(m):
-        classname = m.__class__.__name__
-        if classname.find('Conv') != -1:
-            n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-            m.weight.data.normal_(0, 0.5 * math.sqrt(2. / n))
-            if m.bias is not None:
-                m.bias.data.zero_()
-        elif classname.find('BatchNorm') != -1:
-            m.weight.data.fill_(1)
-            m.bias.data.zero_()
-        elif classname.find('Linear') != -1:
-            n = m.weight.size(1)
-            m.weight.data.normal_(0, 0.01)
-            m.bias.data = torch.ones(m.bias.data.size())
-
-    def trainer_initial(self, model, loss_fn, step_size=1000):
-        self.model = model
-        self.model.apply(Base.weight_init)
-        self.model = self.model.to(self.device)
-        self.loss_fn = loss_fn
 
     def get_model_out(self, blur):
         '''
@@ -75,6 +51,7 @@ class Base(object):
         torchvision.utils.save_image(deblur.data, path)
 
     def eval(self):
+        self.model = self.model.to(self.device)
         util.print_model(self.model)  # calc model size
         epoch = self.restore_model()
         print(' best model in epoch:{}'.format(epoch))
